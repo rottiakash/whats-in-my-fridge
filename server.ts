@@ -1,5 +1,4 @@
-const { ApolloServer, gql } = require("apollo-server");
-
+import { ApolloServer, gql } from "apollo-server";
 // Initialize firebase admin
 import * as admin from "firebase-admin";
 var serviceAccount = require("./what-is-in-my-fridge-d17be-firebase-adminsdk-t51ko-7d07b06fbc.json");
@@ -8,16 +7,30 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://what-is-in-my-fridge-d17be.firebaseio.com",
 });
-var db = admin.firestore();
-let data = [];
 
-var collection = db.collection("recipies");
+interface Recipe {
+  id: string;
+  name: string;
+  url: string;
+  require: Array<string>;
+}
+
+var db: FirebaseFirestore.Firestore = admin.firestore();
+let data: Array<Recipe> = [];
+
+var collection: FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData> = db.collection(
+  "recipies"
+);
 collection.onSnapshot((querySnapshot) => {
   console.log("Recieved QuerySnapshot");
-  var docs = querySnapshot.docs;
-  data = docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  var docs: FirebaseFirestore.QueryDocumentSnapshot<
+    FirebaseFirestore.DocumentData
+  >[] = querySnapshot.docs;
+  data = docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Array<Recipe>;
   console.log("In Memory cache Updated and Ready");
 });
+
+const score = () => {};
 
 const typeDefs = gql`
   type Recipe {
@@ -38,7 +51,7 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server: ApolloServer = new ApolloServer({ typeDefs, resolvers });
 
 // The `listen` method launches a web server.
 server.listen().then(({ url }) => {
