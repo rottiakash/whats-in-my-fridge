@@ -17,6 +17,7 @@ interface Recipe {
 
 var db: FirebaseFirestore.Firestore = admin.firestore();
 let data: Array<Recipe> = [];
+let all: Array<string> = [];
 
 var collection: FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData> = db.collection(
   "recipies"
@@ -27,6 +28,8 @@ collection.onSnapshot((querySnapshot) => {
     FirebaseFirestore.DocumentData
   >[] = querySnapshot.docs;
   data = docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Array<Recipe>;
+  all = data.reduce((prev, curr) => [...prev, ...curr.require], []);
+  all = [...new Set(all)];
   console.log("In Memory cache Updated and Ready");
 });
 
@@ -41,20 +44,31 @@ const score = (input: Array<string>) => {
 
 const typeDefs = gql`
   type Recipe {
-    id: ID
-    name: String
-    url: String
-    require: [String]
+    id: ID!
+    name: String!
+    url: String!
+    require: [String]!
   }
-
+  type Result {
+    id: ID!
+    name: String!
+    url: String!
+    require: [String]!
+    score: Float!
+    missing: [String]!
+  }
   type Query {
     recipies: [Recipe]
+    score(input: [String]): [Result]
+    ingredients: [String]
   }
 `;
 
 const resolvers = {
   Query: {
     recipies: () => data,
+    score: (_parent, args) => score(args.input),
+    ingredients: () => all,
   },
 };
 
