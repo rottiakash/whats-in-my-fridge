@@ -37,6 +37,7 @@ const score = (input: Array<string>) => {
   let scored = data.map((reciepe) => {
     let missing = reciepe.require.filter((x) => !input.includes(x));
     let score = missing.length / reciepe.require.length;
+    missing = [...new Set(missing)];
     return { ...reciepe, score, missing };
   });
   return scored.sort((a, b) => a.score - b.score);
