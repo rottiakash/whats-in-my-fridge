@@ -1,6 +1,7 @@
 import { ApolloServer, gql } from "apollo-server";
 // Initialize firebase admin
 import * as admin from "firebase-admin";
+import * as _ from "lodash";
 var serviceAccount = require("./what-is-in-my-fridge-d17be-firebase-adminsdk-t51ko-7d07b06fbc.json");
 
 admin.initializeApp({
@@ -28,6 +29,7 @@ collection.onSnapshot((querySnapshot) => {
     FirebaseFirestore.DocumentData
   >[] = querySnapshot.docs;
   data = docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Array<Recipe>;
+  data = _.uniqBy(data, "url");
   all = data.reduce((prev, curr) => [...prev, ...curr.require], []);
   all = [...new Set(all)];
   console.log("In Memory cache Updated and Ready");
